@@ -11,12 +11,14 @@ import android.graphics.RectF
 import android.util.AttributeSet
 import android.view.View
 import androidx.core.content.ContextCompat
+import java.lang.Integer.min
 
 class ChessView(context : Context?, attrs : AttributeSet?) : View(context, attrs) {
 
-    private final val originX = 20f
-    private final val originY = 200f
-    private final val cellSide : Float = 130f
+    private final val scaleFactor = 0.9f
+    private final var originX = 20f
+    private final var originY = 200f
+    private final var cellSide : Float = 130f
 
     private var lightColor = ContextCompat.getColor(context!!, R.color.lightSquare)
     private var darkColor = ContextCompat.getColor(context!!, R.color.darkSquare)
@@ -45,8 +47,17 @@ class ChessView(context : Context?, attrs : AttributeSet?) : View(context, attrs
     }
 
     override fun onDraw(canvas: Canvas?){
+        canvas ?: return
+
+
+        val chessBoardSide = min(canvas.width, canvas.height) * scaleFactor
+        cellSide = chessBoardSide / 8f
+        originX= (canvas.width - chessBoardSide) / 2f
+        originY = (canvas.height - chessBoardSide) / 2f
+
         drawChessBoard(canvas)
         drawPieces(canvas)
+
     }
 
     private fun loadBitmaps(){
@@ -68,8 +79,10 @@ class ChessView(context : Context?, attrs : AttributeSet?) : View(context, attrs
     }
 
     private fun drawPieceAt(canvas: Canvas?, col : Int, row : Int, resID : Int){
+        canvas ?: return
+
         val pieceBitmap = bitmaps[resID]!!
-        canvas?.drawBitmap(pieceBitmap,
+        canvas.drawBitmap(pieceBitmap,
             null,
             RectF(originX + col * cellSide,
                 originY + (7-row) * cellSide,
@@ -87,12 +100,14 @@ class ChessView(context : Context?, attrs : AttributeSet?) : View(context, attrs
     }
 
     private fun drawSquareAt(canvas: Canvas?, col : Int,row : Int, isDark : Boolean){
+        canvas ?: return
+
         if(isDark){
             paint.color = darkColor
         }else{
             paint.color = lightColor
         }
-        canvas?.drawRect(
+        canvas.drawRect(
             originX + col * cellSide,
             originY + row * cellSide,
             originX + (col + 1)*cellSide,

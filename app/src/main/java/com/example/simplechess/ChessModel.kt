@@ -5,6 +5,25 @@ class ChessModel {
 
     init{
         reset()
+
+        movePiece(0,1,0,7)
+        movePiece(0,7,0,4)
+
+    }
+
+    fun movePiece(fromCol : Int, fromRow : Int, toCol : Int, toRow : Int){
+        val movingPiece = pieceAt(fromCol, fromRow) ?: return
+
+        pieceAt(toCol, toRow)?.let{
+            if (it.player == movingPiece.player){
+                return
+            }
+            piecesBox.remove(it)
+        }
+
+        movingPiece.col = toCol
+        movingPiece.row = toRow
+
     }
     fun reset(){
         piecesBox.removeAll(piecesBox)
