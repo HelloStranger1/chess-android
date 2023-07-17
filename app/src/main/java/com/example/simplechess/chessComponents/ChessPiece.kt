@@ -1,4 +1,4 @@
-package com.example.simplechess.ChessComponents
+package com.example.simplechess.chessComponents
 
 data class ChessPiece(
     val col : Int,

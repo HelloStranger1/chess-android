@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">SimpleChess</string>
+    <string name="reset_button">Reset\n</string>
 </resources>

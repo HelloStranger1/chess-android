@@ -1,4 +1,4 @@
-package com.example.simplechess.ChessComponents
+package com.example.simplechess.chessComponents
 
 interface ChessDelegate {
     fun pieceAt(col : Int, row : Int) : ChessPiece?
