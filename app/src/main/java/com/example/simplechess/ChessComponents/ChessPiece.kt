@@ -1,8 +1,8 @@
-package com.example.simplechess
+package com.example.simplechess.ChessComponents
 
 data class ChessPiece(
-    var col : Int,
-    var row : Int,
+    val col : Int,
+    val row : Int,
     val player : ChessPlayer,
     val rank : ChessRank,
     val resID : Int

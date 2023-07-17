@@ -4,28 +4,29 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
-import android.graphics.Color
 import android.graphics.Paint
-import android.graphics.Rect
 import android.graphics.RectF
 import android.util.AttributeSet
+import android.util.Log
+import android.view.MotionEvent
 import android.view.View
 import androidx.core.content.ContextCompat
+import com.example.simplechess.ChessComponents.ChessDelegate
 import java.lang.Integer.min
 
 class ChessView(context : Context?, attrs : AttributeSet?) : View(context, attrs) {
 
-    private final val scaleFactor = 0.9f
-    private final var originX = 20f
-    private final var originY = 200f
-    private final var cellSide : Float = 130f
+    private val scaleFactor = 0.9f
+    private var originX = 20f
+    private var originY = 200f
+    private var cellSide : Float = 130f
 
     private var lightColor = ContextCompat.getColor(context!!, R.color.lightSquare)
     private var darkColor = ContextCompat.getColor(context!!, R.color.darkSquare)
 
-    private final val paint = Paint()
-    private final val bitmaps = mutableMapOf<Int, Bitmap>()
-    private final val imgResIDs = setOf(
+    private val paint = Paint()
+    private val bitmaps = mutableMapOf<Int, Bitmap>()
+    private val imgResIDs = setOf(
         R.drawable.ic_white_king,
         R.drawable.ic_white_queen,
         R.drawable.ic_white_rook,
@@ -41,6 +42,10 @@ class ChessView(context : Context?, attrs : AttributeSet?) : View(context, attrs
         R.drawable.ic_black_pawn,
     )
 
+    private var fromCol : Int = -1
+    private var fromRow : Int = -1
+    private var movingPieceX : Float = -1f
+    private var movingPieceY : Float = -1f
     var chessDelegate : ChessDelegate? = null
     init {
         loadBitmaps()
@@ -50,16 +55,36 @@ class ChessView(context : Context?, attrs : AttributeSet?) : View(context, attrs
         canvas ?: return
 
 
-        val chessBoardSide = min(canvas.width, canvas.height) * scaleFactor
+        val chessBoardSide = min(width, height) * scaleFactor
         cellSide = chessBoardSide / 8f
-        originX= (canvas.width - chessBoardSide) / 2f
-        originY = (canvas.height - chessBoardSide) / 2f
+        originX= (width - chessBoardSide) / 2f
+        originY = (height - chessBoardSide) / 2f
 
         drawChessBoard(canvas)
         drawPieces(canvas)
 
     }
 
+    override fun onTouchEvent(event: MotionEvent?): Boolean {
+        when (event?.action){
+            MotionEvent.ACTION_DOWN ->{
+                fromCol = ((event.x - originX) / cellSide).toInt()
+                fromRow = 7 - ((event.y - originY) / cellSide).toInt()
+            }
+            MotionEvent.ACTION_UP ->{
+                val col = ((event.x - originX) / cellSide).toInt()
+                val row = 7 - ((event.y - originY) / cellSide).toInt()
+                Log.d("Move", "from ($fromCol, $fromRow) to ($col, $row)")
+                chessDelegate?.movePiece(fromCol, fromRow, col, row)
+            }
+            MotionEvent.ACTION_MOVE ->{
+                movingPieceX = event.x
+                movingPieceY = event.y
+                invalidate()
+            }
+        }
+        return true
+    }
     private fun loadBitmaps(){
         imgResIDs.forEach{
             bitmaps[it] = BitmapFactory.decodeResource(resources, it)
@@ -69,11 +94,25 @@ class ChessView(context : Context?, attrs : AttributeSet?) : View(context, attrs
     private fun drawPieces(canvas: Canvas?){
         for(row in 0..7){
             for(col in 0..7){
-                val piece = chessDelegate?.pieceAt(col,row)?.let{
-                    drawPieceAt(canvas, col, row, it.resID)
+                if(row != fromRow || col != fromCol){
+                    val piece = chessDelegate?.pieceAt(col,row)?.let{
+                        drawPieceAt(canvas, col, row, it.resID)
+                    }
                 }
 
             }
+        }
+        chessDelegate?.pieceAt(fromCol, fromRow)?.let{
+            val pieceBitmap = bitmaps[it.resID]!!
+            canvas?.drawBitmap(pieceBitmap,
+                null,
+                RectF(
+                    movingPieceX - cellSide / 2,
+                    movingPieceY - cellSide / 2,
+                    movingPieceX + cellSide / 2,
+                    movingPieceY + cellSide / 2),
+                paint
+            )
         }
 
     }
