@@ -5,14 +5,17 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
+import android.widget.Toast
 import com.example.simplechess.chessComponents.ChessDelegate
 import com.example.simplechess.chessComponents.ChessGame
 import com.example.simplechess.chessComponents.ChessPiece
 import com.example.simplechess.ChessView
 import com.example.simplechess.R
 import java.io.PrintWriter
+import java.net.ConnectException
 import java.net.ServerSocket
 import java.net.Socket
+import java.net.SocketException
 import java.util.Scanner
 import java.util.concurrent.Executors
 
@@ -28,7 +31,7 @@ class MainActivity : AppCompatActivity(), ChessDelegate {
     private var btnConnect : Button? = null
     private lateinit var chessView: ChessView
     private var printWriter: PrintWriter? = null
-    private val isEmulator = Build.FINGERPRINT.contains("generic")
+    private var serverSocket : ServerSocket? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.e("Listen", "Listening ")
         super.onCreate(savedInstanceState)
@@ -43,27 +46,45 @@ class MainActivity : AppCompatActivity(), ChessDelegate {
         btnReset?.setOnClickListener{
             ChessGame.reset()
             chessView.invalidate()
+            btnListen?.isEnabled = true
+            serverSocket?.close()
         }
         btnListen?.setOnClickListener{
-            Log.e("Listen", "Listening1")
+            btnListen?.isEnabled = false
             val port = socketGuestPort
             Executors.newSingleThreadExecutor().execute{
-
-                val serverSocket = ServerSocket(port)
-                Log.e("Listen", "Listening1 on port $port...")
-                val socket = serverSocket.accept()
-                Log.e("Listen", "Listening on port $port...")
-                receiveMove(socket)
+                runOnUiThread {
+                    Toast.makeText(this, "Socket listening on port $port", Toast.LENGTH_LONG).show()
+                }
+                try{
+                    serverSocket = ServerSocket(port)
+                    val socket = serverSocket?.accept()
+                    if (socket != null) {
+                        receiveMove(socket)
+                    }
+                } catch ( e : SocketException){
+                    Log.e("Socket", "Socket closed")
+                }
 
             }
 
         }
         btnConnect?.setOnClickListener{
             Executors.newSingleThreadExecutor().execute{
-                Log.e("ConnectTag", "Connect")
-                val socket = Socket(socketHost, socketPort)
-                receiveMove(socket)
-                Log.e("ConnectTag", "Connect1")
+                runOnUiThread {
+                    Toast.makeText(this, "Socket Client Connecting...", Toast.LENGTH_LONG).show()
+                }
+
+                try{
+                    val socket = Socket(socketHost, socketPort)
+                    receiveMove(socket)
+                }catch (e : ConnectException){
+                    runOnUiThread {
+                        Toast.makeText(this, "Connection Failed", Toast.LENGTH_LONG).show()
+                    }
+
+                }
+
             }
 
         }
