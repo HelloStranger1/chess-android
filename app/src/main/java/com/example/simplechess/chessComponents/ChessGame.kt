@@ -2,7 +2,7 @@ package com.example.simplechess.chessComponents
 
 import com.example.simplechess.R
 
-class ChessModel {
+object ChessGame {
     var piecesBox = mutableSetOf<ChessPiece>()
 
     init{
