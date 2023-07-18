@@ -33,9 +33,10 @@ object ChessGame {
 
     }
     private fun canPieceMove(pieceType: PieceType, from: Square, to: Square, isWhite : Boolean) : Boolean{
+        if (to.col < 0 || to.col > 7 || to.row < 0 || to.row > 7) return false
         return when(pieceType){
             PieceType.QUEEN -> { canQueenMove(from, to)}
-            PieceType.KING -> { canKingMove(from, to)}
+            PieceType.KING -> { canKingMove(from, to, isWhite)}
             PieceType.ROOK -> { canRookMove(from, to)}
             PieceType.BISHOP -> { canBishopMove(from, to)}
             PieceType.KNIGHT -> { canKnightMove(from, to)}
@@ -89,13 +90,41 @@ object ChessGame {
         return canRookMove(from, to) || canBishopMove(from, to)
     }
 
-    private fun canKingMove(from: Square, to: Square): Boolean {
-        if (canQueenMove(from, to)) {
+    private fun canKingMove(from: Square, to: Square, isWhite: Boolean): Boolean {
+        if (canQueenMove(from, to) && willKingBeChecked(to, isWhite)) {
             val deltaCol = kotlin.math.abs(from.col - to.col)
             val deltaRow = kotlin.math.abs(from.row - to.row)
             return deltaCol == 1 && deltaRow == 1 || deltaCol + deltaRow == 1
         }
         return false
+    }
+
+    private fun willKingBeChecked(to: Square, isWhite: Boolean) : Boolean{
+
+        for(piece in piecesBox){
+            if(piece.pieceType == PieceType.KING || (isWhite && piece.player == ChessPlayer.WHITE) || (!isWhite && piece.player == ChessPlayer.BLACK)){
+                continue
+            }
+            if(piece.col == to.col && piece.row == to.row){
+                continue
+            }
+            if (piece.pieceType == PieceType.PAWN){
+
+                if(isWhite){
+                    Log.e("Pawn", "$piece, $to, ${kotlin.math.abs(piece.col-to.col)} ${to.row - piece.row}")
+                    if (kotlin.math.abs(piece.col-to.col) == 1  && to.row - piece.row == -1){
+                        return false
+                    }
+                } else{
+                    if (kotlin.math.abs(piece.col-to.col) == 1  && to.row - piece.row == 1){
+                        return false
+                    }
+                }
+            }else if(canPieceMove(piece.pieceType, Square(piece.col, piece.row), to, !isWhite)){
+                return false
+            }
+        }
+        return true
     }
     private fun canRookMove(from: Square, to: Square): Boolean {
         if (from.col == to.col && isClearVerticallyBetween(from, to) ||
