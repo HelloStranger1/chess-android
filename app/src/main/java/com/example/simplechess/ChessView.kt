@@ -13,6 +13,7 @@ import android.view.View
 import androidx.core.content.ContextCompat
 import com.example.simplechess.chessComponents.ChessDelegate
 import com.example.simplechess.chessComponents.ChessPiece
+import com.example.simplechess.chessComponents.Square
 import com.example.simplechess.utils.constants.cellSide
 import com.example.simplechess.utils.constants.imgResIDs
 import com.example.simplechess.utils.constants.originX
@@ -63,7 +64,7 @@ class ChessView(context : Context?, attrs : AttributeSet?) : View(context, attrs
             MotionEvent.ACTION_DOWN ->{
                 fromCol = ((event.x - originX) / cellSide).toInt()
                 fromRow = 7 - ((event.y - originY) / cellSide).toInt()
-                chessDelegate?.pieceAt(fromCol, fromRow)?.let{
+                chessDelegate?.pieceAt(Square(fromCol, fromRow))?.let{
                     movingPiece = it
                     movingPieceBitmap = pieceBitmaps[it.resID]
                 }
@@ -72,7 +73,7 @@ class ChessView(context : Context?, attrs : AttributeSet?) : View(context, attrs
                 val col = ((event.x - originX) / cellSide).toInt()
                 val row = 7 - ((event.y - originY) / cellSide).toInt()
                 if(fromCol != col || fromRow != row){
-                    chessDelegate?.movePiece(fromCol, fromRow, col, row)
+                    chessDelegate?.movePiece(Square(fromCol, fromRow), Square(col, row))
                 }
 
                 movingPieceBitmap = null
@@ -96,7 +97,7 @@ class ChessView(context : Context?, attrs : AttributeSet?) : View(context, attrs
     private fun drawPieces(canvas: Canvas?){
         for(row in 0..7){
             for(col in 0..7){
-                chessDelegate?.pieceAt(col, row)?.let{
+                chessDelegate?.pieceAt(Square(col, row))?.let{
                     if(it != movingPiece){
                         drawPieceAt(canvas, col, row, it.resID)
                     }

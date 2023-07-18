@@ -1,7 +1,7 @@
 package com.example.simplechess.chessComponents
 
 interface ChessDelegate {
-    fun pieceAt(col : Int, row : Int) : ChessPiece?
+    fun pieceAt(square: Square) : ChessPiece?
 
-    fun movePiece(fromCol : Int, fromRow : Int, toCol : Int, toRow : Int)
+    fun movePiece(from : Square, to : Square)
 }

@@ -1,6 +1,6 @@
 package com.example.simplechess.chessComponents
 
-enum class ChessRank {
+enum class PieceType {
     KING,
     QUEEN,
     BISHOP,

@@ -11,6 +11,7 @@ import com.example.simplechess.chessComponents.ChessGame
 import com.example.simplechess.chessComponents.ChessPiece
 import com.example.simplechess.ChessView
 import com.example.simplechess.R
+import com.example.simplechess.chessComponents.Square
 import java.io.PrintWriter
 import java.net.ConnectException
 import java.net.ServerSocket
@@ -33,7 +34,7 @@ class MainActivity : AppCompatActivity(), ChessDelegate {
     private var printWriter: PrintWriter? = null
     private var serverSocket : ServerSocket? = null
     override fun onCreate(savedInstanceState: Bundle?) {
-        Log.e("Listen", "Listening ")
+
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
@@ -43,6 +44,7 @@ class MainActivity : AppCompatActivity(), ChessDelegate {
         btnListen = findViewById(R.id.btn_listen)
         btnConnect = findViewById(R.id.btn_connect)
 
+        Log.e("Game", ChessGame.toString())
         btnReset?.setOnClickListener{
             ChessGame.reset()
             chessView.invalidate()
@@ -65,9 +67,7 @@ class MainActivity : AppCompatActivity(), ChessDelegate {
                 } catch ( e : SocketException){
                     Log.e("Socket", "Socket closed")
                 }
-
             }
-
         }
         btnConnect?.setOnClickListener{
             Executors.newSingleThreadExecutor().execute{
@@ -82,11 +82,8 @@ class MainActivity : AppCompatActivity(), ChessDelegate {
                     runOnUiThread {
                         Toast.makeText(this, "Connection Failed", Toast.LENGTH_LONG).show()
                     }
-
                 }
-
             }
-
         }
 
         val chessView = findViewById<ChessView>(R.id.chess_view)
@@ -99,19 +96,19 @@ class MainActivity : AppCompatActivity(), ChessDelegate {
         while(scanner.hasNextLine()){
             val move = scanner.nextLine().split(",").map { it.toInt()}
             runOnUiThread {
-                ChessGame.movePiece(move[0], move[1], move[2], move[3])
+                ChessGame.movePiece(Square(move[0], move[1]), Square(move[2], move[3]))
                 chessView.invalidate()
             }
         }
     }
-    override fun pieceAt(col: Int, row: Int): ChessPiece? {
-        return ChessGame.pieceAt(col, row)
+    override fun pieceAt(square: Square): ChessPiece? {
+        return ChessGame.pieceAt(square)
     }
 
-    override fun movePiece(fromCol: Int, fromRow: Int, toCol: Int, toRow: Int) {
-        ChessGame.movePiece(fromCol, fromRow, toCol, toRow)
+    override fun movePiece(from : Square, to : Square) {
+        ChessGame.movePiece(from, to)
         chessView.invalidate()
-        val moveStr = "$fromCol,$fromRow,$toCol,$toRow"
+        val moveStr = "${from.col},${from.row},${to.col},${to.row}"
         Executors.newSingleThreadExecutor().execute{
             printWriter?.println(moveStr)
         }
