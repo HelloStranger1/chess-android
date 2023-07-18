@@ -10,19 +10,23 @@ object ChessGame {
         reset()
     }
 
-    fun movePiece(from : Square, to : Square){
-        if (from.col == to.col && from.row == to.row) return
-        val movingPiece = pieceAt(from) ?: return
+    fun movePiece(from : Square, to : Square,  isPlayerWhite : Boolean) : Boolean{
+        if (from.col == to.col && from.row == to.row) return false
+        val movingPiece = pieceAt(from) ?: return false
+        if(movingPiece.player == ChessPlayer.WHITE && !isPlayerWhite) return false
+        if(movingPiece.player == ChessPlayer.BLACK && isPlayerWhite) return false
+
         if (!canPieceMove(movingPiece.pieceType, from, to, movingPiece.player == ChessPlayer.WHITE)){
-            Log.e("move", "Piece  cannot move")
-            return
+            Log.e("TAG", "Piece  cannot move")
+            return false
         }else{
-            Log.e("move", "Piece $movingPiece can move from $from to $to")
+            Log.e("TAG", "Piece $movingPiece can move from $from to $to")
         }
         pieceAt(to)?.let{
 
             if (it.player == movingPiece.player){
-                return
+                Log.e("TAG", "Cannot move, friendly piece in way")
+                return false
             }
 
             piecesBox.remove(it)
@@ -30,7 +34,7 @@ object ChessGame {
         }
         piecesBox.remove(movingPiece)
         piecesBox.add(ChessPiece(to.col, to.row, movingPiece.player, movingPiece.pieceType, movingPiece.resID))
-
+        return true
     }
     private fun canPieceMove(pieceType: PieceType, from: Square, to: Square, isWhite : Boolean) : Boolean{
         if (to.col < 0 || to.col > 7 || to.row < 0 || to.row > 7) return false
@@ -111,7 +115,7 @@ object ChessGame {
             if (piece.pieceType == PieceType.PAWN){
 
                 if(isWhite){
-                    Log.e("Pawn", "$piece, $to, ${kotlin.math.abs(piece.col-to.col)} ${to.row - piece.row}")
+                    Log.e("TAG", "$piece, $to, ${kotlin.math.abs(piece.col-to.col)} ${to.row - piece.row}")
                     if (kotlin.math.abs(piece.col-to.col) == 1  && to.row - piece.row == -1){
                         return false
                     }
