@@ -5,6 +5,8 @@ import com.example.simplechess.R
 
 object ChessGame {
     var piecesBox = mutableSetOf<ChessPiece>()
+    lateinit var whiteKingLocation : Square
+    lateinit var blackKingLocation : Square
 
     init{
         reset()
@@ -16,29 +18,54 @@ object ChessGame {
         if(movingPiece.player == ChessPlayer.WHITE && !isPlayerWhite) return false
         if(movingPiece.player == ChessPlayer.BLACK && isPlayerWhite) return false
 
-        if (!canPieceMove(movingPiece.pieceType, from, to, movingPiece.player == ChessPlayer.WHITE)){
+        if (!canPieceMove(movingPiece, from, to, movingPiece.player == ChessPlayer.WHITE)){
             Log.e("TAG", "Piece  cannot move")
             return false
         }else{
             Log.e("TAG", "Piece $movingPiece can move from $from to $to")
         }
         pieceAt(to)?.let{
-
             if (it.player == movingPiece.player){
                 Log.e("TAG", "Cannot move, friendly piece in way")
                 return false
             }
-
             piecesBox.remove(it)
-
         }
         piecesBox.remove(movingPiece)
         piecesBox.add(ChessPiece(to.col, to.row, movingPiece.player, movingPiece.pieceType, movingPiece.resID))
+        if(movingPiece.pieceType == PieceType.KING){
+            if(movingPiece.player == ChessPlayer.WHITE) {
+                whiteKingLocation = Square(to.col, to.row)
+            }else{
+                blackKingLocation = Square(to.col, to.row)
+            }
+        }
         return true
     }
-    private fun canPieceMove(pieceType: PieceType, from: Square, to: Square, isWhite : Boolean) : Boolean{
+    private fun canPieceMove(movingPiece: ChessPiece, from: Square, to: Square, isWhite : Boolean, isCapturingKing : Boolean = false) : Boolean{
         if (to.col < 0 || to.col > 7 || to.row < 0 || to.row > 7) return false
-        return when(pieceType){
+        if(!isCapturingKing && movingPiece.pieceType != PieceType.KING){
+            piecesBox.remove(movingPiece)
+            for(piece in piecesBox){
+                if(piece.pieceType == PieceType.KING ||
+                    (isWhite && piece.player == ChessPlayer.WHITE) ||
+                    (!isWhite && piece.player == ChessPlayer.BLACK) ||
+                    (piece.col == to.col && piece.row == to.row))
+                {
+                    continue
+                }
+                if(piece.player == ChessPlayer.WHITE && canPieceMove(piece, Square(piece.col, piece.row), blackKingLocation, isWhite = true, isCapturingKing = true)){
+                    piecesBox.add(ChessPiece(from.col, from.row, movingPiece.player, movingPiece.pieceType, movingPiece.resID))
+                    return false
+                }else if(piece.player == ChessPlayer.BLACK && canPieceMove(piece, Square(piece.col, piece.row), whiteKingLocation, isWhite = false, isCapturingKing = true)){
+                    piecesBox.add(ChessPiece(from.col, from.row, movingPiece.player, movingPiece.pieceType, movingPiece.resID))
+                    return false
+                }
+            }
+            piecesBox.add(ChessPiece(from.col, from.row, movingPiece.player, movingPiece.pieceType, movingPiece.resID))
+        }
+
+        return when(movingPiece.pieceType){
             PieceType.QUEEN -> { canQueenMove(from, to)}
             PieceType.KING -> { canKingMove(from, to, isWhite)}
             PieceType.ROOK -> { canRookMove(from, to)}
@@ -77,11 +104,12 @@ object ChessGame {
         //white Queen and King
         piecesBox.add(ChessPiece(3,0, ChessPlayer.WHITE, PieceType.QUEEN, R.drawable.ic_white_queen))
         piecesBox.add(ChessPiece(4,0, ChessPlayer.WHITE, PieceType.KING, R.drawable.ic_white_king))
+        whiteKingLocation = Square(4,0)
 
-        //black Bishops
+        //black Queen and king
         piecesBox.add(ChessPiece(3,7, ChessPlayer.BLACK, PieceType.QUEEN, R.drawable.ic_black_queen))
         piecesBox.add(ChessPiece(4,7, ChessPlayer.BLACK, PieceType.KING, R.drawable.ic_black_king))
-
+        blackKingLocation = Square(4,7)
         for( i in 0..7){ //Pawns
             piecesBox.add(ChessPiece(i,1, ChessPlayer.WHITE, PieceType.PAWN, R.drawable.ic_white_pawn))
             piecesBox.add(ChessPiece(i,6, ChessPlayer.BLACK, PieceType.PAWN, R.drawable.ic_black_pawn))
@@ -124,7 +152,7 @@ object ChessGame {
                         return false
                     }
                 }
-            }else if(canPieceMove(piece.pieceType, Square(piece.col, piece.row), to, !isWhite)){
+            }else if(canPieceMove(piece, Square(piece.col, piece.row), to, !isWhite, true)){
                 return false
             }
         }
@@ -133,6 +161,8 @@ object ChessGame {
     private fun canRookMove(from: Square, to: Square): Boolean {
         if (from.col == to.col && isClearVerticallyBetween(from, to) ||
             from.row == to.row && isClearHorizontallyBetween(from, to)) {
+
+
             return true
         }
         return false

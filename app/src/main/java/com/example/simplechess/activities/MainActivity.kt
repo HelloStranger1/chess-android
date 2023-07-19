@@ -112,7 +112,10 @@ class MainActivity : AppCompatActivity(), ChessDelegate {
             runOnUiThread {
                 val isValid = ChessGame.movePiece(Square(move[0], move[1]), Square(move[2], move[3]), !isPlayerWhite)
                 chessView.invalidate()
-                isWhitesTurn = !isWhitesTurn
+                if(isValid){
+                    isWhitesTurn = !isWhitesTurn
+                }
+
 
                 Log.e("TAG", "receive: $isWhitesTurn")
             }
@@ -133,7 +136,10 @@ class MainActivity : AppCompatActivity(), ChessDelegate {
         Executors.newSingleThreadExecutor().execute{
             printWriter?.println(moveStr)
         }
-        isWhitesTurn = !isWhitesTurn
+        if(isValid){
+            isWhitesTurn = !isWhitesTurn
+        }
+
         Log.e("TAG", "write: $isWhitesTurn")
 
     }
