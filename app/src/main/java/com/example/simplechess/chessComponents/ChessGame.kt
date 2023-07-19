@@ -55,16 +55,18 @@ object ChessGame {
                     continue
                 }
                 if(piece.player == ChessPlayer.WHITE && canPieceMove(piece, Square(piece.col, piece.row), blackKingLocation, isWhite = true, isCapturingKing = true)){
+                    Log.e("TAG", "1Piece that can take king is: $piece king is at: $blackKingLocation")
                     piecesBox.add(ChessPiece(from.col, from.row, movingPiece.player, movingPiece.pieceType, movingPiece.resID))
                     return false
                 }else if(piece.player == ChessPlayer.BLACK && canPieceMove(piece, Square(piece.col, piece.row), whiteKingLocation, isWhite = false, isCapturingKing = true)){
+                    Log.e("TAG", "2Piece that can take king is: $piece king is at: $whiteKingLocation")
                     piecesBox.add(ChessPiece(from.col, from.row, movingPiece.player, movingPiece.pieceType, movingPiece.resID))
                     return false
                 }
             }
             piecesBox.add(ChessPiece(from.col, from.row, movingPiece.player, movingPiece.pieceType, movingPiece.resID))
         }
-
+        Log.e("TAG", "piece wont put into check")
         return when(movingPiece.pieceType){
             PieceType.QUEEN -> { canQueenMove(from, to)}
             PieceType.KING -> { canKingMove(from, to, isWhite)}
@@ -187,9 +189,9 @@ object ChessGame {
         if(isWhite){
             if(from.col == to.col){
                 if(to.row - from.row == 1){
-                    return true
+                    return pieceAt(to) == null
                 }else if(to.row - from.row == 2){
-                    return from.row == 1
+                    return from.row == 1 && pieceAt(to) == null && pieceAt(Square(to.col, to.row -1)) == null
                 }else{
                     return false
                 }
@@ -203,7 +205,7 @@ object ChessGame {
                 if(from.row - to.row == 1){
                     return true
                 }else if(from.row - to.row == 2){
-                    return from.row == 6
+                    return from.row == 6 && pieceAt(to) == null && pieceAt(Square(to.col, to.row +1)) == null
                 }else{
                     return false
                 }
