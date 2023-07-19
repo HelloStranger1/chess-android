@@ -7,8 +7,10 @@ object ChessGame {
     var piecesBox = mutableSetOf<ChessPiece>()
     lateinit var whiteKingLocation : Square
     lateinit var blackKingLocation : Square
+    var isWhitesTurn : Boolean = true
 
     init{
+
         reset()
     }
 
@@ -45,28 +47,26 @@ object ChessGame {
     private fun canPieceMove(movingPiece: ChessPiece, from: Square, to: Square, isWhite : Boolean, isCapturingKing : Boolean = false) : Boolean{
         if (to.col < 0 || to.col > 7 || to.row < 0 || to.row > 7) return false
         if(!isCapturingKing && movingPiece.pieceType != PieceType.KING){
+            val kingLocation = if(isWhite) whiteKingLocation else blackKingLocation
             piecesBox.remove(movingPiece)
-            for(piece in piecesBox){
-                if(piece.pieceType == PieceType.KING ||
-                    (isWhite && piece.player == ChessPlayer.WHITE) ||
-                    (!isWhite && piece.player == ChessPlayer.BLACK) ||
-                    (piece.col == to.col && piece.row == to.row))
-                {
-                    continue
-                }
-                if(piece.player == ChessPlayer.WHITE && canPieceMove(piece, Square(piece.col, piece.row), blackKingLocation, isWhite = true, isCapturingKing = true)){
-                    Log.e("TAG", "1Piece that can take king is: $piece king is at: $blackKingLocation")
-                    piecesBox.add(ChessPiece(from.col, from.row, movingPiece.player, movingPiece.pieceType, movingPiece.resID))
-                    return false
-                }else if(piece.player == ChessPlayer.BLACK && canPieceMove(piece, Square(piece.col, piece.row), whiteKingLocation, isWhite = false, isCapturingKing = true)){
-                    Log.e("TAG", "2Piece that can take king is: $piece king is at: $whiteKingLocation")
-                    piecesBox.add(ChessPiece(from.col, from.row, movingPiece.player, movingPiece.pieceType, movingPiece.resID))
-                    return false
+            val pieceChecking : ChessPiece? = pieceCheckingKing(kingLocation, isWhite)
+            var isKingSafe : Boolean = true
+            if(pieceChecking != null) {
+                if(pieceChecking.col == to.col && pieceChecking.row == to.row){
+                    piecesBox.remove(pieceChecking)
+                    val anotherPieceChecking : ChessPiece? = pieceCheckingKing(kingLocation, isWhite)
+                    if (anotherPieceChecking != null) {
+                        isKingSafe = false
+                    }
+                    piecesBox.add(ChessPiece(pieceChecking.col, pieceChecking.row, pieceChecking.player, pieceChecking.pieceType, pieceChecking.resID))
+                }else{
+                    isKingSafe = false
                 }
             }
             piecesBox.add(ChessPiece(from.col, from.row, movingPiece.player, movingPiece.pieceType, movingPiece.resID))
+            if(!isKingSafe) return false
         }
-        Log.e("TAG", "piece wont put into check")
+
         return when(movingPiece.pieceType){
             PieceType.QUEEN -> { canQueenMove(from, to)}
             PieceType.KING -> { canKingMove(from, to, isWhite)}
@@ -79,6 +79,7 @@ object ChessGame {
     }
     fun reset(){
         piecesBox.removeAll(piecesBox)
+        isWhitesTurn = true
         //white Rooks
         piecesBox.add(ChessPiece(0,0, ChessPlayer.WHITE, PieceType.ROOK, R.drawable.ic_white_rook))
         piecesBox.add(ChessPiece(7,0, ChessPlayer.WHITE, PieceType.ROOK, R.drawable.ic_white_rook))
@@ -125,7 +126,8 @@ object ChessGame {
     }
 
     private fun canKingMove(from: Square, to: Square, isWhite: Boolean): Boolean {
-        if (canQueenMove(from, to) && willKingBeChecked(to, isWhite)) {
+
+        if (canQueenMove(from, to) && pieceCheckingKing(to, isWhite) == null) {
             val deltaCol = kotlin.math.abs(from.col - to.col)
             val deltaRow = kotlin.math.abs(from.row - to.row)
             return deltaCol == 1 && deltaRow == 1 || deltaCol + deltaRow == 1
@@ -133,32 +135,21 @@ object ChessGame {
         return false
     }
 
-    private fun willKingBeChecked(to: Square, isWhite: Boolean) : Boolean{
+    private fun pieceCheckingKing(to: Square, isWhite: Boolean) : ChessPiece?{
 
         for(piece in piecesBox){
-            if(piece.pieceType == PieceType.KING || (isWhite && piece.player == ChessPlayer.WHITE) || (!isWhite && piece.player == ChessPlayer.BLACK)){
+            if(piece.pieceType == PieceType.KING ||
+                (isWhite && piece.player == ChessPlayer.WHITE) ||
+                (!isWhite && piece.player == ChessPlayer.BLACK) ||
+                (piece.col == to.col && piece.row == to.row)){
                 continue
             }
-            if(piece.col == to.col && piece.row == to.row){
-                continue
-            }
-            if (piece.pieceType == PieceType.PAWN){
-
-                if(isWhite){
-                    Log.e("TAG", "$piece, $to, ${kotlin.math.abs(piece.col-to.col)} ${to.row - piece.row}")
-                    if (kotlin.math.abs(piece.col-to.col) == 1  && to.row - piece.row == -1){
-                        return false
-                    }
-                } else{
-                    if (kotlin.math.abs(piece.col-to.col) == 1  && to.row - piece.row == 1){
-                        return false
-                    }
-                }
-            }else if(canPieceMove(piece, Square(piece.col, piece.row), to, !isWhite, true)){
-                return false
+            if(canPieceMove(piece, Square(piece.col, piece.row), to, !isWhite, true)){
+                Log.e("TAG", "King can't move to $to because $piece can capture him")
+                return piece
             }
         }
-        return true
+        return null
     }
     private fun canRookMove(from: Square, to: Square): Boolean {
         if (from.col == to.col && isClearVerticallyBetween(from, to) ||

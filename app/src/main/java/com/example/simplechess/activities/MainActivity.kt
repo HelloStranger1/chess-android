@@ -27,7 +27,7 @@ class MainActivity : AppCompatActivity(), ChessDelegate {
     private val socketHost = "10.0.2.2"
 
     private var isPlayerWhite : Boolean = true
-    private var isWhitesTurn : Boolean = true
+
     private var btnReset : Button? = null
     private var btnListen : Button? = null
     private var btnConnect : Button? = null
@@ -113,11 +113,11 @@ class MainActivity : AppCompatActivity(), ChessDelegate {
                 val isValid = ChessGame.movePiece(Square(move[0], move[1]), Square(move[2], move[3]), !isPlayerWhite)
                 chessView.invalidate()
                 if(isValid){
-                    isWhitesTurn = !isWhitesTurn
+                    ChessGame.isWhitesTurn = !ChessGame.isWhitesTurn
                 }
 
 
-                Log.e("TAG", "receive: $isWhitesTurn")
+                Log.e("TAG", "receive: ${ChessGame.isWhitesTurn}")
             }
         }
     }
@@ -127,8 +127,8 @@ class MainActivity : AppCompatActivity(), ChessDelegate {
 
     override fun movePiece(from : Square, to : Square) {
         Log.e("TAG", "isPlaying white1: $isPlayerWhite")
-        if(isPlayerWhite && !isWhitesTurn) return
-        if(!isPlayerWhite && isWhitesTurn) return
+        if(isPlayerWhite && !ChessGame.isWhitesTurn) return
+        if(!isPlayerWhite && ChessGame.isWhitesTurn) return
         val isValid = ChessGame.movePiece(from, to, isPlayerWhite)
 
         chessView.invalidate()
@@ -137,10 +137,10 @@ class MainActivity : AppCompatActivity(), ChessDelegate {
             printWriter?.println(moveStr)
         }
         if(isValid){
-            isWhitesTurn = !isWhitesTurn
+            ChessGame.isWhitesTurn = !ChessGame.isWhitesTurn
         }
 
-        Log.e("TAG", "write: $isWhitesTurn")
+        Log.e("TAG", "write: ${ChessGame.isWhitesTurn}")
 
     }
 }
