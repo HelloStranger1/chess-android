@@ -49,7 +49,7 @@ object ChessGame {
         if(!isCapturingKing && movingPiece.pieceType != PieceType.KING){
             val kingLocation = if(isWhite) whiteKingLocation else blackKingLocation
             piecesBox.remove(movingPiece)
-            val pieceChecking : ChessPiece? = pieceCheckingKing(kingLocation, isWhite)
+            var pieceChecking : ChessPiece? = pieceCheckingKing(kingLocation, isWhite)
             var isKingSafe : Boolean = true
             if(pieceChecking != null) {
                 if(pieceChecking.col == to.col && pieceChecking.row == to.row){
@@ -60,7 +60,14 @@ object ChessGame {
                     }
                     piecesBox.add(ChessPiece(pieceChecking.col, pieceChecking.row, pieceChecking.player, pieceChecking.pieceType, pieceChecking.resID))
                 }else{
-                    isKingSafe = false
+                    //checking if move will block check
+                    val tempPiece = ChessPiece(to.col, to.row, movingPiece.player, movingPiece.pieceType, -1)
+                    piecesBox.add(tempPiece)
+                    var pieceChecking = pieceCheckingKing(kingLocation, isWhite)
+                    if(pieceChecking != null){
+                        isKingSafe = false
+                    }
+                    piecesBox.remove(tempPiece)
                 }
             }
             piecesBox.add(ChessPiece(from.col, from.row, movingPiece.player, movingPiece.pieceType, movingPiece.resID))
